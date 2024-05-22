@@ -7,7 +7,7 @@ docker run --network=cluster -d --name dog -p 8125:8125/udp \
   -v /proc/:/host/proc/:ro \
   -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro \
   -v /home/ubuntu/datadog:/conf.d:ro \
-  -e DD_API_KEY=cceb5decf303df6881c75e22a627a7e6 \
+  -e DD_API_KEY=$DATADOG_API_KEY \
   -e DD_SITE="datadoghq.com" \
   -e DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true \
   -e DD_PROCESS_AGENT_ENABLED=true \
