@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 GITHUB_REPO=$1
 trufflehog git ${GITHUB_REPO} --only-verified
