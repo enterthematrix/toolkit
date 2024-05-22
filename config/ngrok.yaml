@@ -1,0 +1,8 @@
+authtoken: {{NGROK_AUTH_TOKEN}}
+tunnels:
+  t500:
+    addr: 19500
+    proto: http
+  t540:
+    addr: 19540
+    proto: http

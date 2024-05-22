@@ -1,0 +1,28 @@
+init_config:
+  is_jmx: true
+  collect_default_metrics: true
+
+instances:
+  - host: localhost
+    port: 3333
+    name: streamsets
+    conf:
+      # Gather record count and rate metrics from StreamSets pipelines
+      - include:
+          domain: metrics
+          attribute:
+            - Count
+            - OneMinuteRate
+            - FiveMinuteRate
+            - FifteenMinuteRate
+            - MeanRate
+      # Gather threading stats for the JVM
+      - include:
+          domain: java.lang
+          bean: java.lang:type=Threading
+          attribute:
+            - DaemonThreadCount
+            - PeakThreadCount
+            - ThreadCount
+            - TotalStartedThreadCount
+
