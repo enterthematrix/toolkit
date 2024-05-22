@@ -1,4 +1,5 @@
 
+#!/bin/zsh
 
 https://docs.datadoghq.com/integrations/java/?tab=docker
 
