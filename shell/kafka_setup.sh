@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 version: '2'
 services:
   zookeeper:

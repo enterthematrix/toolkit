@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 https://registry.hub.docker.com/r/vladgh/rsyslog
 
 # create certs dir

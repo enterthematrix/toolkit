@@ -1,3 +1,5 @@
+#!/bin/zsh
+
 ## Dynamic Databrick's Spark cluster config
 
 {
