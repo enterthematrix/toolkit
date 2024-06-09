@@ -21,5 +21,5 @@ npm install express pg hashring crypto
 # example POST request
 http://localhost:8081/?url=https://wikipedia.com/sharding
 
-# test in chrome console
+# test a write in chrome console
 fetch("http://localhost:8081/?url=https://wikipedia.com/sharding", {"method":"POST"}).then(a=>a.json()).then(console.log)

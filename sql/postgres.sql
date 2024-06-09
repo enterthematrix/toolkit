@@ -113,3 +113,4 @@ vacuum (analyze, verbose, full);
 
 explain analyze select id,g from students where g > 80 and g < 95 order by g;
 create index g_idx on students(g) include(id);
+
