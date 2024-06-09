@@ -7,12 +7,11 @@ docker build -t pagila .
 docker run --name pg_dvd_rental  -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d pagila
 docker exec -it pg_dvd_rental psql -U postgres
 ```
+# ER Diagram: 
+<img src="../../images/sakila.png" align="center"/>
 
-## DVD Rental Sample Queries
-```
-```
-
-# 1. Top store for movie sales 
+# DVD Rental Sample Queries
+#### 1. Top store for movie sales 
 query to return the name of the store and its manager, that generated the most sales.
 ```
 SELECT 
@@ -25,8 +24,7 @@ ORDER BY
 LIMIT 
   1;    
 ```
-
-# 2. Top 3 movie categories by sales
+#### 2. Top 3 movie categories by sales
 query to find the top 3 film categories that generated the most sales.
 ```
 SELECT 
@@ -37,10 +35,8 @@ ORDER BY
   total_sales DESC 
 LIMIT 
   3;
-
 ```
-
-# 3. Top 5 shortest movies
+#### 3. Top 5 shortest movies
 query to return the titles of the 5 shortest movies by duration.
 ```
 SELECT 
@@ -52,8 +48,7 @@ ORDER BY
 LIMIT 
   5;
 ```
-
-# 4. Staff without a profile image
+#### 4. Staff without a profile image
 ```
 SELECT 
   first_name, 
@@ -62,9 +57,8 @@ FROM
   staff 
 WHERE 
   picture IS NULL;
-
 ```
-# 5. Monthly revenue
+#### 5. Monthly revenue
 query to return the total movie rental revenue for each month.
 ```
 SELECT 
@@ -75,8 +69,7 @@ FROM payment
 GROUP BY year, mon
 ORDER BY year, mon;
 ```
-
-# 6. Daily revenue in June, 2020
+#### 6. Daily revenue in June, 2020
 ```
 SELECT 
 	DATE(payment_ts) AS dt,
@@ -86,8 +79,7 @@ WHERE DATE(payment_ts) >= '2020-06-01'
 AND DATE(payment_ts) <= '2020-06-30'
 GROUP BY dt;
 ```
-
-# 7. Unique customers count by month
+#### 7. Unique customers count by month
 ```
 SELECT 
 	EXTRACT(YEAR FROM rental_ts) AS year,
@@ -96,8 +88,7 @@ SELECT
 FROM rental
 GROUP BY year, mon;
 ```
-
-# 8. Average customer spend by month
+#### 8. Average customer spend by month
 ```
 SELECT
 	EXTRACT(YEAR FROM payment_ts) AS year,
@@ -107,8 +98,7 @@ FROM payment
 GROUP BY year, mon
 ORDER BY year, mon;
 ```
-
-# 9. Number of high spend customers by month
+#### 9. Number of high spend customers by month
 ```
 SELECT 
     year,
@@ -126,8 +116,7 @@ FROM (
 WHERE amt > 20
 GROUP BY 1,2;
 ```
-
-# 10. Min and max spend
+#### 10. Min and max spend
 query to return the minimum and maximum customer total spend in June 2020
 ```
 WITH cust_tot_amt AS (
@@ -144,8 +133,7 @@ SELECT
     MAX(tot_amt) AS max_spend
 FROM cust_tot_amt;
 ```
-
-# 11. Actors' last name
+#### 11. Actors' last name
 number of actors whose last name is one of the following: 'DAVIS', 'BRODY', 'ALLEN', 'BERRY'
 ```
 SELECT
@@ -155,8 +143,7 @@ FROM actor
 WHERE last_name IN ('DAVIS', 'BRODY', 'ALLEN', 'BERRY')
 GROUP BY last_name;
 ```
-
-# 12. Actors' last name ending in 'EN' or 'RY'
+#### 12. Actors' last name ending in 'EN' or 'RY'
 ```
 SELECT
   last_name,
@@ -166,8 +153,7 @@ WHERE last_name LIKE ('%RY')
 OR last_name LIKE ('%EN')
 GROUP BY last_name;
 ```
-
-# 13. Actors' first name
+#### 13. Actors' first name
 query to return the number of actors whose first name starts with 'A', 'B', 'C', or others.
 ```
 SELECT  
@@ -180,7 +166,7 @@ SELECT
 FROM actor
 GROUP BY actor_category;
 ```
-# 14. Good days and bad days
+#### 14. Good days and bad days
 query to return the number of good days and bad days in May 2020 based on number of daily rentals.
 ```
 -- (For users who already know OUTER JOIN):
@@ -201,7 +187,7 @@ SELECT
     SUM(CASE WHEN num_rentals <=100 THEN 1 ELSE 0 END) AS bad_days
 FROM daily_rentals;
 ```
-# 15. Fast movie watchers vs slow watchers
+#### 15. Fast movie watchers vs slow watchers
 fast movie watcher by average return their rentals within 5 days.
 ```
 WITH average_rental_days AS (
@@ -220,7 +206,7 @@ SELECT CASE WHEN average_days <= 5 THEN 'fast_watcher'
 FROM average_rental_days
 GROUP BY watcher_category;
 ```
-# 16. Actors from film 'AFRICAN EGG'
+#### 16. Actors from film 'AFRICAN EGG'
 ```
 SELECT A.first_name, A.last_name
 FROM film F
@@ -230,8 +216,7 @@ INNER JOIN actor A
 ON A.actor_id = FA.actor_id
 WHERE F.title = 'AFRICAN EGG';
 ```
-
-# 17. Most popular movie category
+#### 17. Most popular movie category
 ```
 SELECT 
 	C.name
@@ -242,8 +227,7 @@ GROUP BY C.name
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 ```
-
-# 18. Most popular movie category (name and id)
+#### 18. Most popular movie category (name and id)
 ```
 SELECT 
     C.category_id,
@@ -255,8 +239,7 @@ GROUP BY C.category_id
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 ```
-
-# 19. Most productive actor with inner join
+#### 19. Most productive actor with inner join
 ```
 SELECT
     FA.actor_id,
@@ -269,8 +252,7 @@ GROUP BY FA.actor_id
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 ```
-
-# 20. Top 2 most rented movie in June 2020
+#### 20. Top 2 most rented movie in June 2020
 query to return the film_id and title of the top 2 movies that were rented the most times in June 2020
 ```
 SELECT 
@@ -286,9 +268,8 @@ AND   DATE(rental_ts) <= '2020-06-30'
 GROUP BY F.film_id
 ORDER BY COUNT(*) DESC
 LIMIT 2;
-
 ```
-# 21. Productive actors vs less-productive actors
+#### 21. Productive actors vs less-productive actors
 (productive: appeared in >= 30 films)
 ```
 SELECT actor_category,
@@ -304,8 +285,7 @@ FROM (
 ) X
 GROUP BY actor_category;
 ```
-
-# 21. Films that are in stock vs not in stock
+#### 21. Films that are in stock vs not in stock
 ```
 SELECT in_stock, COUNT(*) 
 FROM (
@@ -319,8 +299,7 @@ FROM (
 ) X
 GROUP BY in_stock;
 ```
-
-# 22. Customers who rented vs. those who did not in May 2020
+#### 22. Customers who rented vs. those who did not in May 2020
 ```
 SELECT have_rented, COUNT(*)
 FROM (
@@ -338,7 +317,7 @@ FROM (
 ) X
 GROUP BY have_rented;
 ```
-# 23. In-demand vs not-in-demand movies
+#### 23. In-demand vs not-in-demand movies
 (in-demand: rented >1 times in May 2020)
 ```
 SELECT demand_category, COUNT(*)
@@ -360,8 +339,7 @@ FROM (
 )X
 GROUP BY demand_category;
 ```
-
-# 24. Movie inventory optimization 
+#### 24. Movie inventory optimization 
 query to return the number of unique inventory_id for movies with 0 rentals in May 2020
 ```
 SELECT COUNT(inventory_id )
@@ -384,8 +362,7 @@ INNER JOIN (
 )Y
 ON Y.film_id = I.film_id;
 ```
-
-# 25. Actors and customers whose last name starts with 'A'
+#### 25. Actors and customers whose last name starts with 'A'
 query to return unique names (first_name, last_name) of our customers and actors whose last name starts with letter 'A'.
 ```
 SELECT first_name, last_name
@@ -396,8 +373,7 @@ SELECT first_name, last_name
 FROM actor
 WHERE last_name LIKE 'A%';
 ```
-
-# 26. Actors and customers whose first names end in 'D'
+#### 26. Actors and customers whose first names end in 'D'
 query to return all actors and customers whose first names ends in 'D'
 ```
 SELECT customer_id, first_name, last_name
@@ -408,8 +384,7 @@ SELECT actor_id, first_name, last_name
 FROM actor
 WHERE first_name LIKE '%D';
 ```
-
-# 27. avg replacement cost per category
+#### 27. avg replacement cost per category
 ```
 SELECT 
   title, 
@@ -418,10 +393,8 @@ SELECT
   AVG(replacement_cost) OVER(PARTITION BY rating) AS avg_cost 
 FROM 
   film;
-
 ```
-
-# 28. movie length stats per category
+#### 28. movie length stats per category
 ```
 SELECT 
   title, 
@@ -440,8 +413,7 @@ FROM
       INNER JOIN category C ON C.category_id = FC.category_id
   ) X;
 ```
-
-# 29. movie length stats by id
+#### 29. movie length stats by id
 ```
 SELECT 
   film_id, 
@@ -461,8 +433,7 @@ FROM
 ORDER BY 
   film_id;
 ```
-
-# 30. Percentage of revenue per movie
+#### 30. Percentage of revenue per movie
 (film_id <= 10)
 ```
 select 
@@ -487,10 +458,8 @@ from
   ) 
 where 
   film_id <= 10
-
 ```
-
-# 31. Percentage of revenue per movie by category
+#### 31. Percentage of revenue per movie by category
 (film_id <= 10)
 query to return the percentage of revenue for each of the following films: film_id <= 10 by its category
 ```
@@ -519,10 +488,8 @@ from
   ) 
 where 
   film_id <= 10;
-
 ```
-
-# 32. Movie rentals and average rentals in the same category
+#### 32. Movie rentals and average rentals in the same category
 (film_id <= 10)
 query to return the number of rentals per movie, and the average number of rentals in its same category
 ```
@@ -553,9 +520,8 @@ from
 where 
   film_id <= 10
 ```
-
-# 33. Customer spend vs average spend in the same store
-query to return a customer's life time value for the following: customer_id IN (1, 100, 101, 200, 201, 300, 301, 400, 401, 500)
+#### 33. Customer spend vs average spend in the same store
+query to return a customer's lifetime value for the following: customer_id IN (1, 100, 101, 200, 201, 300, 301, 400, 401, 500)
 ```
 SELECT 
   customer_id, 
