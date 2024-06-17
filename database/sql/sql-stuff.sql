@@ -254,14 +254,13 @@ CREATE ROLE username WITH LOGIN ENCRYPTED PASSWORD 'password';
 GRANT CONNECT ON DATABASE dbname TO username;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO username;
 
--- MYSQL setup :
+-- MYSQL docker setup :
+docker run --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root  -d mysql:5.7
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+flush privileges;
 Set root passsword - $ mysqladmin -u root password NEWPASSWORD
 Reset password - mysqladmin -u root -p'oldpassword' password newpass
-GRANT ALL PRIVILEGES ON *.* TO 'user'@'host' IDENTIFIED BY 'password' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'node-1.cluster' IDENTIFIED BY '' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'eysxdszl.cluster' IDENTIFIED BY 'root' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON *.* TO 'mysql'@'178.18.0.5' IDENTIFIED BY 'mysql' WITH GRANT OPTION;
-flush privileges;
+
 
 Test Employee database @ https://github.com/datacharmer/test_db
 Test data generator: https://github.com/snowindy/csv-test-data-generator
