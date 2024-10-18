@@ -121,7 +121,6 @@ stf --docker-image streamsets/testframework-4.x:latest test -vs --sch-credential
 ## SSH tunnel
 'ssh -i ~/.ssh/sanju.pem  -L 1521:10.10.52.163:1521 sanjeev@34.222.148.53'
 
-
 #  ============================================================= EC2 setup  ===============================================
 sudo su -
 passwd ubuntu
@@ -176,6 +175,12 @@ cd ~/workspace
 git clone https://github.com/clusterdock/topology_cdh.git
 sudo pip3 install -r topology_cdh/requirements.txt
 ste -v start CDH_6.3.0 --sdc-version 3.21.0-latest --predictable --secondary-nodes node-{2..3}
+
+#  ============================================================= Misc  ===============================================
+Mac Display setting:
+
+displayplacer "id:310C70C2-EBF0-407F-8962-287ACF1B4BAD res:3840x1080"
+displayplacer "id:310C70C2-EBF0-407F-8962-287ACF1B4BAD res:3200x900"
 
 
 
