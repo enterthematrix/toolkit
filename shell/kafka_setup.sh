@@ -49,10 +49,10 @@ docker run --network=cluster -h sanju.kafka -p 9092:9092 --name kafka -d \
 
 
 kafka-topics --list --bootstrap-server `hostname`:9092
-kafka-topics --create --bootstrap-server `hostname`:9092 --replication-factor 1 --partitions 1 --topic cdc
+kafka-topics --create --bootstrap-server `hostname`:9092 --replication-factor 1 --partitions 1 --topic sch_notifications
 kafka-topics --describe --bootstrap-server `hostname`:9092 --topic test
 kafka-console-producer --broker-list `hostname`:9092 --topic test
-kafka-console-consumer --bootstrap-server `hostname`:9092 --topic test --from-beginning
+kafka-console-consumer --bootstrap-server `hostname`:9092 --topic sch_notifications --from-beginning
 # list consumer groups
 kafka-consumer-groups --list --bootstrap-server `hostname`:9092
 # create consumer group

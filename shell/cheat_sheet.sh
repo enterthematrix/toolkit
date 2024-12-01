@@ -100,11 +100,19 @@ docker run --name sanju-nginx -d -p 18890:80 nginx
 docker run --name sanju-nginx --network=cluster --restart on-failure -v /home/ubuntu/nginx/nginx.conf:/etc/nginx/nginx.conf:ro -d -p 18890:80 nginx
 
 # HAProxy:
-docker run --name sanju-haproxy --network=cluster --restart on-failure -v $(pwd):/usr/local/etc/haproxy:ro  -d -p 18890:80 -p 8404:8404 haproxy
+docker run -d \
+  --name haproxy \
+  --network cluster \
+  -v $(pwd)/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro \
+  -p 18890:80 \
+  haproxy:latest
 
 # NGROK:
 ngrok http 80 --log=stdout > ngrok.log &
 /home/ubuntu/.ngrok2/ngrok.yml
+
+nohup ngrok start --all --config ~/workspace/ngrok/sanju.yml > ngrok.log 2>&1 &
+
 
 
 # Jenkins setup:
@@ -149,7 +157,7 @@ sudo apt  install awscli
 aws configure
 
 # Copy to a docker:
-docker cp flight_data/ sdc-322:/tmp/
+docker cp flight_data/ StreamWatch-1:/
 
 cd ~/JDBC
 wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.23.tar.gz
