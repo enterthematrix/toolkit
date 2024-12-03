@@ -6,6 +6,17 @@ docker build -t pagila .
 ```
 docker run --name pg_dvd_rental  -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d pagila
 docker exec -it pg_dvd_rental psql -U postgres
+
+# create dates table:
+CREATE TABLE dates (
+    date DATE PRIMARY KEY
+);
+
+SELECT *
+FROM   dates D
+WHERE  D.date >= '2020-05-01'
+       AND D.date <= '2020-05-31';
+
 ```
 # ER Diagram: 
 <img src="../../images/sakila.png" align="center"/>
@@ -13,6 +24,14 @@ docker exec -it pg_dvd_rental psql -U postgres
 # DVD Rental Sample Queries
 #### 1. Top store for movie sales 
 Query to return the name of the store and its manager, that generated the most sales.
+
+Expected Output:
+```commandline
+        store        |   manager    
+---------------------+--------------
+ Woodridge,Australia | Jon Stephens
+
+```
 ```
 SELECT 
   store, 
@@ -26,6 +45,15 @@ LIMIT
 ```
 #### 2. Top 3 movie categories by sales
 Query to find the top 3 film categories that generated the most sales.
+
+Expected Output:
+```commandline
+ category  
+-----------
+ Sports
+ Sci-Fi
+ Animation
+```
 ```
 SELECT 
   category 
@@ -38,6 +66,18 @@ LIMIT
 ```
 #### 3. Top 5 shortest movies
 Query to return the titles of the 5 shortest movies by duration.
+
+Expected Output:
+```commandline
+        title        
+---------------------
+ KWAI HOMEWARD
+ LABYRINTH LEAGUE
+ IRON MOON
+ ALIEN CENTER
+ RIDGEMONT SUBMARINE
+
+```
 ```
 SELECT 
   title 
@@ -49,6 +89,15 @@ LIMIT
   5;
 ```
 #### 4. Staff without a profile image
+
+Expected Output:
+```commandline
+ first_name | last_name 
+------------+-----------
+ Mike       | Hillyer
+ Jon        | Stephens
+
+```
 ```
 SELECT 
   first_name, 
@@ -60,45 +109,117 @@ WHERE
 ```
 #### 5. Monthly revenue
 Query to return the total movie rental revenue for each month.
+
+Expected Output:
+```commandline
+ year | mon |   rev    
+------+-----+----------
+ 2020 |   1 |  4824.43
+ 2020 |   2 |  9631.88
+ 2020 |   3 | 23886.56
+ 2020 |   4 | 28559.46
+ 2020 |   5 |   514.18
+
+```
 ```
 SELECT 
-    EXTRACT(YEAR FROM payment_ts) AS year,
-    EXTRACT(MONTH FROM payment_ts) AS mon,
+    EXTRACT(YEAR FROM payment_date) AS year,
+    EXTRACT(MONTH FROM payment_date) AS mon,
     SUM(amount) as rev
 FROM payment
 GROUP BY year, mon
 ORDER BY year, mon;
 ```
-#### 6. Daily revenue in June, 2020
+#### 6. Daily revenue in April, 2020
+
+Expected Output:
+```commandline
+     dt     |   sum   
+------------+---------
+ 2020-04-05 |  335.19
+ 2020-04-06 | 2053.20
+ 2020-04-07 | 2014.22
+ 2020-04-08 | 2231.83
+ 2020-04-09 | 2056.89
+ 2020-04-10 | 1996.09
+ 2020-04-11 | 1961.35
+ 2020-04-12 | 1825.69
+ 2020-04-26 |  436.01
+ 2020-04-27 | 2647.57
+ 2020-04-28 | 2652.72
+ 2020-04-29 | 2818.36
+ 2020-04-30 | 5530.34
+(13 rows)
+
+```
 ```
 SELECT 
-	DATE(payment_ts) AS dt,
+	DATE(payment_date) AS dt,
 	SUM(amount)
 FROM payment
-WHERE DATE(payment_ts) >= '2020-06-01'
-AND DATE(payment_ts) <= '2020-06-30'
+WHERE DATE(payment_date) >= '2020-04-01'
+AND DATE(payment_date) <= '2020-04-30'
 GROUP BY dt;
 ```
 #### 7. Unique customers count by month
+
+Expected Output:
+```commandline
+ year | mon | uu_cnt 
+------+-----+--------
+ 2005 |   5 |    520
+ 2005 |   6 |    590
+ 2005 |   7 |    599
+ 2005 |   8 |    599
+ 2020 |   2 |    158
+(5 rows)
+
+```
 ```
 SELECT 
-	EXTRACT(YEAR FROM rental_ts) AS year,
-	EXTRACT(MONTH FROM rental_ts) AS mon,
+	EXTRACT(YEAR FROM rental_date) AS year,
+	EXTRACT(MONTH FROM rental_date) AS mon,
 	COUNT(DISTINCT customer_id) AS uu_cnt
 FROM rental
 GROUP BY year, mon;
 ```
 #### 8. Average customer spend by month
+
+Expected Output:
+```commandline
+ year | mon |      avg_spend      
+------+-----+---------------------
+ 2020 |   1 |  9.2777500000000000
+ 2020 |   2 | 16.3252203389830508
+ 2020 |   3 | 39.8773956594323873
+ 2020 |   4 | 47.6785642737896494
+ 2020 |   5 |  3.2543037974683544
+(5 rows)
+
+```
 ```
 SELECT
-	EXTRACT(YEAR FROM payment_ts) AS year,
-	EXTRACT(MONTH FROM payment_ts) AS mon,
+	EXTRACT(YEAR FROM payment_date) AS year,
+	EXTRACT(MONTH FROM payment_date) AS mon,
 	SUM(amount)/COUNT(DISTINCT customer_id) AS avg_spend
 FROM payment
 GROUP BY year, mon
 ORDER BY year, mon;
 ```
 #### 9. Number of high spend customers by month
+(amount > 20)
+
+Expected Output:
+```commandline
+ year | mon | count 
+------+-----+-------
+ 2020 |   1 |    30
+ 2020 |   2 |   174
+ 2020 |   3 |   542
+ 2020 |   4 |   583
+(4 rows)
+
+```
 ```
 SELECT 
     year,
@@ -106,8 +227,8 @@ SELECT
     COUNT(DISTINCT customer_id) 
 FROM (
     SELECT
-        EXTRACT(YEAR FROM payment_ts) AS year,	
-        EXTRACT(MONTH FROM payment_ts) AS mon,
+        EXTRACT(YEAR FROM payment_date) AS year,	
+        EXTRACT(MONTH FROM payment_date) AS mon,
         customer_id,
         SUM(amount) amt
     FROM payment
@@ -117,15 +238,23 @@ WHERE amt > 20
 GROUP BY 1,2;
 ```
 #### 10. Min and max spend
-Query to return the minimum and maximum customer total spend in June 2020
+Query to return the minimum and maximum customer total spend in April 2020
+
+Expected Output:
+```commandline
+ min_spend | max_spend 
+-----------+-----------
+      7.97 |    100.78
+
+```
 ```
 WITH cust_tot_amt AS (
     SELECT
         customer_id,	
         SUM(amount) AS tot_amt
     FROM payment
-    WHERE DATE(payment_ts) >= '2020-06-01'
-    AND DATE(payment_ts) <= '2020-06-30'
+    WHERE DATE(payment_date) >= '2020-04-01'
+    AND DATE(payment_date) <= '2020-04-30'
     GROUP BY customer_id
 )
 SELECT 
@@ -135,6 +264,18 @@ FROM cust_tot_amt;
 ```
 #### 11. Actors' last name
 number of actors whose last name is one of the following: 'DAVIS', 'BRODY', 'ALLEN', 'BERRY'
+
+Expected Output:
+```commandline
+ last_name | count 
+-----------+-------
+ ALLEN     |     3
+ DAVIS     |     3
+ BRODY     |     2
+ BERRY     |     3
+(4 rows)
+
+```
 ```
 SELECT
   last_name,
@@ -144,6 +285,21 @@ WHERE last_name IN ('DAVIS', 'BRODY', 'ALLEN', 'BERRY')
 GROUP BY last_name;
 ```
 #### 12. Actors' last name ending in 'EN' or 'RY'
+
+Expected Output:
+```commandline
+ last_name | count 
+-----------+-------
+ ALLEN     |     3
+ BERGEN    |     1
+ MCKELLEN  |     2
+ MCQUEEN   |     2
+ MALDEN    |     1
+ BERRY     |     3
+ WALKEN    |     1
+(7 rows)
+
+```
 ```
 SELECT
   last_name,
@@ -155,6 +311,16 @@ GROUP BY last_name;
 ```
 #### 13. Actors' first name
 Query to return the number of actors whose first name starts with 'A', 'B', 'C', or others.
+
+Expected Output:
+```commandline
+ actor_category | count 
+----------------+-------
+ b_actors       |     8
+ c_actors       |    18
+ other_actors   |   161
+ a_actors       |    13
+```
 ```
 SELECT  
  CASE WHEN first_name LIKE 'A%' THEN 'a_actors'
@@ -167,19 +333,26 @@ FROM actor
 GROUP BY actor_category;
 ```
 #### 14. Good days and bad days
-Query to return the number of good days and bad days in May 2020 based on number of daily rentals.
-```
--- (For users who already know OUTER JOIN):
+Query to return the number of good days and bad days in Feb 2020 based on number of daily rentals.
+rental > 100 == good day
 
+Expected Output:
+```commandline
+ good_days | bad_days 
+-----------+----------
+         1 |       28
+
+```
+```
 WITH daily_rentals AS (
   SELECT  
 	  D.date AS dt,
 	  COUNT(R.rental_id) AS num_rentals
   FROM dates D
   LEFT JOIN rental R 
-  ON D.date = DATE(R.rental_ts)
-  WHERE D.date >= '2020-05-01'
-  AND D.date <= '2020-05-31' 
+  ON D.date = DATE(R.rental_date)
+  WHERE D.date >= '2020-02-01'
+  AND D.date <= '2020-02-29' 
   GROUP BY D.date
 )
 SELECT
@@ -189,13 +362,22 @@ FROM daily_rentals;
 ```
 #### 15. Fast movie watchers vs slow watchers
 fast movie watcher by average return their rentals within 5 days.
+
+Expected Output:
+```commandline
+watcher_category | count 
+------------------+-------
+ fast_watcher     |   112
+ slow_watcher     |   487
+
+```
 ```
 WITH average_rental_days AS (
 	SELECT 
 	    customer_id,        
-	    AVG(EXTRACT(days FROM (return_ts - rental_ts) ) + 1) AS average_days
+	    AVG(EXTRACT(days FROM (return_date - rental_date) ) + 1) AS average_days
 	FROM rental
-	WHERE return_ts IS NOT NULL
+	WHERE return_date IS NOT NULL
 	GROUP BY 1
 )
 SELECT CASE WHEN average_days <= 5 THEN 'fast_watcher'
@@ -207,6 +389,19 @@ FROM average_rental_days
 GROUP BY watcher_category;
 ```
 #### 16. Actors from film 'AFRICAN EGG'
+
+Expected Output:
+```commandline
+ first_name | last_name 
+------------+-----------
+ GARY       | PHOENIX
+ DUSTIN     | TAUTOU
+ MATTHEW    | LEIGH
+ MATTHEW    | CARREY
+ THORA      | TEMPLE
+(5 rows)
+
+```
 ```
 SELECT A.first_name, A.last_name
 FROM film F
@@ -217,6 +412,14 @@ ON A.actor_id = FA.actor_id
 WHERE F.title = 'AFRICAN EGG';
 ```
 #### 17. Most popular movie category
+
+Expected Output:
+```commandline
+  name  
+--------
+ Sports
+
+```
 ```
 SELECT 
 	C.name
@@ -228,6 +431,14 @@ ORDER BY COUNT(*) DESC
 LIMIT 1;
 ```
 #### 18. Most popular movie category (name and id)
+
+Expected Output:
+```commandline
+ category_id |  name  
+-------------+--------
+          15 | Sports
+
+```
 ```
 SELECT 
     C.category_id,
@@ -240,6 +451,15 @@ ORDER BY COUNT(*) DESC
 LIMIT 1;
 ```
 #### 19. Most productive actor with inner join
+actor who appeared in most number of films
+
+Expected Output:
+```commandline
+ actor_id | first_name | last_name 
+----------+------------+-----------
+      107 | GINA       | DEGENERES
+
+```
 ```
 SELECT
     FA.actor_id,
@@ -252,8 +472,17 @@ GROUP BY FA.actor_id
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 ```
-#### 20. Top 2 most rented movie in June 2020
-Query to return the film_id and title of the top 2 movies that were rented the most times in June 2020
+#### 20. Top 2 most rented movie in Feb 2020
+Query to return the film_id and title of the top 2 movies that were rented the most times in Feb 2020
+
+Expected Output:
+```commandline
+ film_id |         title         
+---------+-----------------------
+     160 | CLUB GRAFFITI
+     189 | CREATURES SHAKESPEARE
+```
+
 ```
 SELECT 
     F.film_id, 
@@ -263,14 +492,19 @@ INNER JOIN inventory I
 ON I.inventory_id = R.inventory_id
 INNER JOIN film F
 ON F.film_id = I.film_id
-WHERE DATE(rental_ts) >= '2020-06-01'
-AND   DATE(rental_ts) <= '2020-06-30'
+WHERE DATE(rental_date) >= '2020-02-01'
+AND   DATE(rental_date) <= '2020-02-29'
 GROUP BY F.film_id
 ORDER BY COUNT(*) DESC
 LIMIT 2;
 ```
 #### 21. Productive actors vs less-productive actors
 (productive: appeared in >= 30 films)
+
+Expected Output:
+```commandline
+
+```
 ```
 SELECT actor_category,
     COUNT(*)
@@ -286,6 +520,10 @@ FROM (
 GROUP BY actor_category;
 ```
 #### 21. Films that are in stock vs not in stock
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT in_stock, COUNT(*) 
 FROM (
@@ -300,6 +538,10 @@ FROM (
 GROUP BY in_stock;
 ```
 #### 22. Customers who rented vs. those who did not in May 2020
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT have_rented, COUNT(*)
 FROM (
@@ -319,6 +561,10 @@ GROUP BY have_rented;
 ```
 #### 23. In-demand vs not-in-demand movies
 (in-demand: rented >1 times in May 2020)
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT demand_category, COUNT(*)
 FROM (
@@ -341,6 +587,10 @@ GROUP BY demand_category;
 ```
 #### 24. Movie inventory optimization 
 Query to return the number of unique inventory_id for movies with 0 rentals in May 2020
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT COUNT(inventory_id )
 FROM inventory I
@@ -364,6 +614,10 @@ ON Y.film_id = I.film_id;
 ```
 #### 25. Actors and customers whose last name starts with 'A'
 Query to return unique names (first_name, last_name) of our customers and actors whose last name starts with letter 'A'.
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT first_name, last_name
 FROM customer
@@ -375,6 +629,10 @@ WHERE last_name LIKE 'A%';
 ```
 #### 26. Actors and customers whose first names end in 'D'
 Query to return all actors and customers whose first names ends in 'D'
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT customer_id, first_name, last_name
 FROM customer
@@ -385,6 +643,10 @@ FROM actor
 WHERE first_name LIKE '%D';
 ```
 #### 27. avg replacement cost per category
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT 
   title, 
@@ -395,6 +657,10 @@ FROM
   film;
 ```
 #### 28. movie length stats per category
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT 
   title, 
@@ -414,6 +680,10 @@ FROM
   ) X;
 ```
 #### 29. movie length stats by id
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT 
   film_id, 
@@ -435,6 +705,10 @@ ORDER BY
 ```
 #### 30. Percentage of revenue per movie
 (film_id <= 10)
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   * 
@@ -462,6 +736,10 @@ where
 #### 31. Percentage of revenue per movie by category
 (film_id <= 10)
 Query to return the percentage of revenue for each of the following films: film_id <= 10 by its category
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT 
   * 
@@ -492,6 +770,10 @@ where
 #### 32. Movie rentals and average rentals in the same category
 (film_id <= 10)
 Query to return the number of rentals per movie, and the average number of rentals in its same category
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   * 
@@ -522,6 +804,10 @@ where
 ```
 #### 33. Customer spend vs average spend in the same store
 Query to return a customer's lifetime value for the following: customer_id IN (1, 100, 101, 200, 201, 300, 301, 400, 401, 500)
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT 
   customer_id, 
@@ -557,6 +843,10 @@ ORDER BY
   1;
 ```
 #### 34. Shortest film by category
+Expected Output:
+```commandline
+
+``` 
 ```
 SELECT 
   film_id, 
@@ -586,6 +876,10 @@ WHERE
 
 ```
 #### 35. Top 5 customers by store
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   store_id, 
@@ -622,6 +916,10 @@ where
 ```
 #### 36. Top 2 films by category
 return the following columns: category, film_id, revenue, row_num
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   category, 
@@ -676,6 +974,10 @@ where
 #### 37. Movie revenue percentiles
 Query to return percentile distribution for the following movies by their total rental revenues in the entire movie catalog.
 film_id IN (1,10,11,20,21,30)
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   * 
@@ -711,6 +1013,10 @@ where
 Query to generate percentile distribution for the following movies by their total rental revenue in their category.
 film_id <= 20
 return columns: category, film_id, revenue, percentile
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   * 
@@ -763,6 +1069,10 @@ where
 Query to return quartiles for the following movies by number of rentals among all movies.
 film_id IN (1,10,11,20,21,30).
 return the following columns: film_id, number of rentals, quartile.
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   * 
@@ -797,6 +1107,10 @@ where
 #### 40. Spend difference between first and second rentals
 Query to return the difference of the spend amount between the following customers' first movie rental and their second rental.
 customer_id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   customer_id, 
@@ -839,6 +1153,10 @@ where
 #### 41. Number of happy customers
 Query to return the number of happy customers from May 24 (inclusive) to May 31 (inclusive)
 Happy customer: customers who made at least 1 rental in each day of any 2 consecutive days.
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   count(*) 
@@ -884,6 +1202,10 @@ from
 ```
 #### 42.  Cumulative spend
 Query to return the cumulative daily spend for customer_id in (1, 2, 3)
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   date, 
@@ -911,6 +1233,10 @@ from
 ```
 #### 43. Cumulative rentals
 Query to return the cumulative daily rentals for customer_id in (3, 4, 5).
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   date, 
@@ -939,7 +1265,10 @@ from
 #### 44. Days when they became happy customers
 Query to return the dates when customer_id in (1,2,3,4,5,6,7,8,9,10) became happy customers.
 Any customers who made at least 10 movie rentals are happy customers.
+Expected Output:
+```commandline
 
+```
 ```
 select 
   customer_id, 
@@ -990,6 +1319,10 @@ where
 #### 45. Number of days to become a happy customer
 Query to return the average number of days for a customer to make his/her 10th rental
 Any customers who made 10 movie rentals are happy customers
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   ROUND(
@@ -1033,6 +1366,10 @@ from
 #### 46. The most productive actors by category
 An actor’s productivity is defined as the number of movies he/she has played.
 Write a query to return the category_id, actor_id and number of moviesby the most productive actor in that category.
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   category_id, 
@@ -1068,6 +1405,10 @@ where
 ```
 #### 47. Top customer by movie category
 For each movie category: return the customer id who spend the most in rentals.
+Expected Output:
+```commandline
+
+``` 
 ```
 select 
   category_id, 
@@ -1105,6 +1446,10 @@ where
 ```
 #### 48. Districts with the most and least customers
 Return the districts with the most and least number of customers.
+Expected Output:
+```commandline
+
+``` 
 ```
 WITH district_cust_cnt AS (
   SELECT 
@@ -1143,6 +1488,10 @@ WHERE
 #### 49. Movie revenue percentiles by category
 Write a query to return revenue percentiles (ordered ascendingly) of movies within their category.
 film_id IN (1,2,3,4,5).
+Expected Output:
+```commandline
+
+``` 
 ```
 WITH movie_rev_by_cat AS (
   SELECT 
@@ -1180,6 +1529,10 @@ where
 ```
 #### 40. Quartiles buckets by number of rentals
 Write a query to return the quartile by the number of rentals (within the same store) for customer_id IN (1,2,3,4,5,6,7,8,9,10)
+Expected Output:
+```commandline
+
+``` 
 ```
 WITH cust_rentals AS (
   SELECT 
@@ -1217,6 +1570,10 @@ where
 #### 50. Spend difference between the last and the second last rentals
 Write a query to return the spend amount difference between the last and the second last movie rentals
 where customer_id IN (1,2,3,4,5,6,7,8,9,10).
+Expected Output:
+```commandline
+
+``` 
 ```
 with delta_x as (
   select 
@@ -1259,6 +1616,10 @@ where
 #### 51. DoD revenue growth for each store
 Write a query to return DoD(day over day) growth for each store from May 1 (inclusive) to May 31 (inclusive).
 DoD: (current_day/prev_day -1) * 100.0
+Expected Output:
+```commandline
+
+``` 
 ```
 WITH store_daily_rev AS (
   SELECT 
