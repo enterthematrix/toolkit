@@ -1,3 +1,5 @@
+#### Source ref: https://github.com/devrimgunduz/pagila
+
 # build the image
 ```
 docker build -t pagila .
@@ -503,6 +505,10 @@ LIMIT 2;
 
 Expected Output:
 ```commandline
+ actor_category  | count 
+-----------------+-------
+ less productive |   128
+ productive      |    72
 
 ```
 ```
@@ -522,6 +528,10 @@ GROUP BY actor_category;
 #### 21. Films that are in stock vs not in stock
 Expected Output:
 ```commandline
+   in_stock   | count 
+--------------+-------
+ in stock     |   958
+ not in stock |    42
 
 ``` 
 ```
@@ -540,6 +550,9 @@ GROUP BY in_stock;
 #### 22. Customers who rented vs. those who did not in May 2020
 Expected Output:
 ```commandline
+ have_rented  | count 
+--------------+-------
+ never-rented |   599
 
 ``` 
 ```
@@ -552,8 +565,8 @@ FROM (
 	LEFT JOIN (
 	    SELECT DISTINCT customer_id
 		FROM rental 
-	    WHERE DATE(rental_ts) >= '2020-05-01'
-	    AND DATE(rental_ts) <= '2020-05-31'
+	    WHERE DATE(rental_date) >= '2020-05-01'
+	    AND DATE(rental_date) <= '2020-05-31'
     ) R	
 	ON R.customer_id = C.customer_id	
 ) X
@@ -561,8 +574,12 @@ GROUP BY have_rented;
 ```
 #### 23. In-demand vs not-in-demand movies
 (in-demand: rented >1 times in May 2020)
+
 Expected Output:
 ```commandline
+ demand_category | count 
+-----------------+-------
+ not in demand   |  1000
 
 ``` 
 ```
@@ -577,8 +594,8 @@ FROM (
 	LEFT JOIN (
 	    SELECT inventory_id, rental_id
 		FROM rental 
-		WHERE DATE(rental_ts) >= '2020-05-01'
-		AND DATE(rental_ts) <= '2020-05-31'
+		WHERE DATE(rental_date) >= '2020-05-01'
+		AND DATE(rental_date) <= '2020-05-31'
 	) R
 	ON R.inventory_id = I.inventory_id
 	GROUP BY F.film_id
@@ -587,8 +604,12 @@ GROUP BY demand_category;
 ```
 #### 24. Movie inventory optimization 
 Query to return the number of unique inventory_id for movies with 0 rentals in May 2020
+
 Expected Output:
 ```commandline
+ count 
+-------
+  4581
 
 ``` 
 ```
@@ -603,8 +624,8 @@ INNER JOIN (
 	    INNER JOIN (
 		SELECT inventory_id, rental_id
 		FROM rental 
-		WHERE DATE(rental_ts) >= '2020-05-01'
-		AND DATE(rental_ts) <= '2020-05-31'
+		WHERE DATE(rental_date) >= '2020-05-01'
+		AND DATE(rental_date) <= '2020-05-31'
 	    ) R
 	    ON I.inventory_id = R.inventory_id
 	) X ON X.film_id = F.film_id
@@ -614,9 +635,39 @@ ON Y.film_id = I.film_id;
 ```
 #### 25. Actors and customers whose last name starts with 'A'
 Query to return unique names (first_name, last_name) of our customers and actors whose last name starts with letter 'A'.
+
 Expected Output:
 ```commandline
-
+ first_name | last_name 
+------------+-----------
+ KENT       | ARSENAULT
+ JOSE       | ANDREW
+ KIM        | ALLEN
+ MERYL      | ALLEN
+ NATHANIEL  | ADAM
+ JORDAN     | ARCHULETA
+ ANGELINA   | ASTAIRE
+ CARL       | ARTIS
+ DEBBIE     | AKROYD
+ CUBA       | ALLEN
+ DARRYL     | ASHCRAFT
+ GORDON     | ALLARD
+ HARRY      | ARCE
+ CHARLENE   | ALVAREZ
+ SHIRLEY    | ALLEN
+ CHRISTIAN  | AKROYD
+ TYRONE     | ASHER
+ BEATRICE   | ARNOLD
+ OSCAR      | AQUINO
+ KIRSTEN    | AKROYD
+ LISA       | ANDERSON
+ RAFAEL     | ABNEY
+ MELANIE    | ARMSTRONG
+ DIANA      | ALEXANDER
+ ALMA       | AUSTIN
+ KATHLEEN   | ADAMS
+ IDA        | ANDREWS
+(27 rows)
 ``` 
 ```
 SELECT first_name, last_name
@@ -629,8 +680,43 @@ WHERE last_name LIKE 'A%';
 ```
 #### 26. Actors and customers whose first names end in 'D'
 Query to return all actors and customers whose first names ends in 'D'
+
 Expected Output:
 ```commandline
+ customer_id | first_name | last_name 
+-------------+------------+-----------
+         304 | DAVID      | ROYAL
+         342 | HAROLD     | MARTINO
+         500 | REGINALD   | KINDER
+         447 | CLIFFORD   | BOWENS
+         419 | CHAD       | CARBONE
+         317 | EDWARD     | BAUGH
+          16 | FRED       | COSTNER
+         465 | FLOYD      | GANDY
+         356 | GERALD     | FULTZ
+         538 | TED        | BREAUX
+         305 | RICHARD    | MCCRARY
+         405 | LEONARD    | SCHOFIELD
+         458 | LLOYD      | DOWD
+         369 | FRED       | WHEAT
+         423 | ALFRED     | CASILLAS
+         517 | BRAD       | MCCURDY
+         578 | WILLARD    | LUMPKIN
+          60 | MILDRED    | BAILEY
+         440 | BERNARD    | COLBY
+         522 | ARNOLD     | HAVENS
+         136 | ED         | MANSFIELD
+         319 | RONALD     | WEINER
+         313 | DONALD     | MAHON
+         524 | JARED      | ELY
+         334 | RAYMOND    | MCWHORTER
+         377 | HOWARD     | FORTNER
+           3 | ED         | CHASE
+         386 | TODD       | TAN
+         521 | ROLAND     | SOUTH
+         179 | ED         | GUINESS
+         133 | RICHARD    | PENN
+(31 rows)
 
 ``` 
 ```
@@ -645,6 +731,13 @@ WHERE first_name LIKE '%D';
 #### 27. avg replacement cost per category
 Expected Output:
 ```commandline
+            title            | rating | replacement_cost |      avg_cost       
+-----------------------------+--------+------------------+---------------------
+ CONNECTION MICROCOSMOS      | G      |            25.99 | 20.1248314606741573
+ CONQUERER NUTS              | G      |            14.99 | 20.1248314606741573
+.....
+ LIES TREATMENT              | NC-17  |            28.99 | 20.1376190476190476
+(1000 rows)
 
 ``` 
 ```
@@ -1181,15 +1274,15 @@ from
           (
             SELECT 
               customer_id, 
-              DATE(rental_ts) AS rental_date 
+              DATE(rental_date) AS rental_date 
             FROM 
               rental 
             WHERE 
-              DATE(rental_ts) >= '2020-05-24' 
-              AND DATE(rental_ts) <= '2020-05-31' 
+              DATE(rental_date) >= '2020-05-24' 
+              AND DATE(rental_date) <= '2020-05-31' 
             GROUP BY 
               customer_id, 
-              DATE(rental_ts)
+              DATE(rental_date)
           )
       ) 
     group by 
@@ -1250,7 +1343,7 @@ select
 from 
   (
     select 
-      date(rental_ts) as date, 
+      date(rental_date) as date, 
       customer_id, 
       count(rental_id) as daily_rental 
     from 
@@ -1298,7 +1391,7 @@ from
         from 
           (
             select 
-              date(rental_ts) as date, 
+              date(rental_date) as date, 
               customer_id, 
               count(rental_id) as daily_rental 
             from 
@@ -1335,30 +1428,30 @@ from
       EXTRACT(
         DAYS 
         FROM 
-          lead(rental_ts) over (partition by customer_id) - rental_ts
+          lead(rental_date) over (partition by customer_id) - rental_date
       ) as days 
     from 
       (
         select 
           customer_id, 
-          rental_ts, 
-          rental_ts_rank 
+          rental_date, 
+          rental_date_rank 
         from 
           (
             select 
               customer_id, 
               rental_id, 
-              rental_ts, 
+              rental_date, 
               ROW_NUMBER() over (
                 partition by customer_id 
                 order by 
-                  rental_ts
-              ) as rental_ts_rank 
+                  rental_date
+              ) as rental_date_rank 
             from 
               rental
           ) 
         where 
-          rental_ts_rank IN (1, 10)
+          rental_date_rank IN (1, 10)
       )
   )
 ```
@@ -1581,12 +1674,12 @@ with delta_x as (
     amount - lag(amount, 1) over (
       partition by customer_id 
       order by 
-        payment_ts
+        payment_date
     ) as delta, 
     row_number() over (
       partition by customer_id 
       order by 
-        payment_ts
+        payment_date
     ) as delta_idx 
   from 
     payment
@@ -1624,18 +1717,18 @@ Expected Output:
 WITH store_daily_rev AS (
   SELECT 
     I.store_id, 
-    DATE(P.payment_ts) date, 
+    DATE(P.payment_date) date, 
     SUM(amount) AS daily_rev 
   FROM 
     payment P 
     INNER JOIN rental R ON R.rental_id = P.rental_id 
     INNER JOIN inventory I ON I.inventory_id = R.inventory_id 
   WHERE 
-    DATE(P.payment_ts) >= '2020-05-01' 
-    AND DATE(P.payment_ts) <= '2020-05-31' 
+    DATE(P.payment_date) >= '2020-05-01' 
+    AND DATE(P.payment_date) <= '2020-05-31' 
   GROUP BY 
     I.store_id, 
-    DATE(P.payment_ts)
+    DATE(P.payment_date)
 ) 
 select 
   store_id, 
