@@ -547,13 +547,13 @@ FROM (
 ) X
 GROUP BY in_stock;
 ```
-#### 22. Customers who rented vs. those who did not in May 2020
+#### 22. Customers who rented vs. those who did not in Feb 2020
 Expected Output:
 ```commandline
  have_rented  | count 
 --------------+-------
- never-rented |   599
-
+ rented       |   158
+ never-rented |   441
 ``` 
 ```
 SELECT have_rented, COUNT(*)
@@ -565,22 +565,22 @@ FROM (
 	LEFT JOIN (
 	    SELECT DISTINCT customer_id
 		FROM rental 
-	    WHERE DATE(rental_date) >= '2020-05-01'
-	    AND DATE(rental_date) <= '2020-05-31'
+	    WHERE DATE(rental_date) >= '2020-02-01'
+	    AND DATE(rental_date) <= '2020-02-29'
     ) R	
 	ON R.customer_id = C.customer_id	
 ) X
 GROUP BY have_rented;
 ```
 #### 23. In-demand vs not-in-demand movies
-(in-demand: rented >1 times in May 2020)
+(in-demand: rented >1 times in Feb 2020)
 
 Expected Output:
 ```commandline
  demand_category | count 
 -----------------+-------
- not in demand   |  1000
-
+ in demand       |    14
+ not in demand   |   986
 ``` 
 ```
 SELECT demand_category, COUNT(*)
@@ -594,8 +594,8 @@ FROM (
 	LEFT JOIN (
 	    SELECT inventory_id, rental_id
 		FROM rental 
-		WHERE DATE(rental_date) >= '2020-05-01'
-		AND DATE(rental_date) <= '2020-05-31'
+		WHERE DATE(rental_date) >= '2020-02-01'
+		AND DATE(rental_date) <= '2020-02-29'
 	) R
 	ON R.inventory_id = I.inventory_id
 	GROUP BY F.film_id
@@ -603,35 +603,24 @@ FROM (
 GROUP BY demand_category;
 ```
 #### 24. Movie inventory optimization 
-Query to return the number of unique inventory_id for movies with 0 rentals in May 2020
+Query to return the number of unique inventory_id for movies with 0 rentals in Feb 2020
 
 Expected Output:
 ```commandline
- count 
+  count 
 -------
-  4581
-
+  4399
 ``` 
 ```
-SELECT COUNT(inventory_id )
-FROM inventory I
-INNER JOIN (
-	SELECT F.film_id
-	FROM film F
-	LEFT JOIN (
-	    SELECT  DISTINCT I.film_id
-	    FROM inventory I
-	    INNER JOIN (
-		SELECT inventory_id, rental_id
-		FROM rental 
-		WHERE DATE(rental_date) >= '2020-05-01'
-		AND DATE(rental_date) <= '2020-05-31'
-	    ) R
-	    ON I.inventory_id = R.inventory_id
-	) X ON X.film_id = F.film_id
-	WHERE X.film_id IS NULL
-)Y
-ON Y.film_id = I.film_id;
+SELECT Count(DISTINCT i.inventory_id)
+FROM   inventory i
+       LEFT JOIN (SELECT inventory_id,
+                         rental_id
+                  FROM   rental
+                  WHERE  Date(rental_date) >= '2020-02-01'
+                         AND Date(rental_date) <= '2020-02-29')r
+              ON i.inventory_id = r.inventory_id
+WHERE  r.rental_id IS NULL; 
 ```
 #### 25. Actors and customers whose last name starts with 'A'
 Query to return unique names (first_name, last_name) of our customers and actors whose last name starts with letter 'A'.
@@ -728,73 +717,95 @@ SELECT actor_id, first_name, last_name
 FROM actor
 WHERE first_name LIKE '%D';
 ```
-#### 27. avg replacement cost per category
+#### 27. avg replacement cost per rating
 Expected Output:
 ```commandline
-            title            | rating | replacement_cost |      avg_cost       
------------------------------+--------+------------------+---------------------
- CONNECTION MICROCOSMOS      | G      |            25.99 | 20.1248314606741573
- CONQUERER NUTS              | G      |            14.99 | 20.1248314606741573
-.....
- LIES TREATMENT              | NC-17  |            28.99 | 20.1376190476190476
-(1000 rows)
+ rating |      avg_cost       
+--------+---------------------
+ G      | 20.1248314606741573
+ PG     | 18.9590721649484536
+ PG-13  | 20.4025560538116592
+ R      | 20.2310256410256410
+ NC-17  | 20.1376190476190476
+(5 rows)
 
 ``` 
 ```
-SELECT 
-  title, 
-  rating, 
-  replacement_cost, 
-  AVG(replacement_cost) OVER(PARTITION BY rating) AS avg_cost 
-FROM 
-  film;
+SELECT rating,
+       Max(avg_cost) AS avg_cost
+FROM  (SELECT rating,
+              Avg(replacement_cost)
+                OVER(
+                  partition BY rating) AS avg_cost
+       FROM   film)
+GROUP  BY rating; 
 ```
-#### 28. movie length stats per category
+#### 28. movie length stats(min/max/avg length) per film category
 Expected Output:
 ```commandline
-
+    name     | max_length | min_length |      avg_length      
+-------------+------------+------------+----------------------
+ Horror      |        181 |         48 | 112.4821428571428571
+ Sports      |        184 |         47 | 128.2027027027027027
+ Children    |        178 |         46 | 109.8000000000000000
+ Action      |        185 |         47 | 111.6093750000000000
+ Comedy      |        185 |         47 | 115.8275862068965517
+ Documentary |        183 |         47 | 108.7500000000000000
+ New         |        183 |         46 | 111.1269841269841270
+ Animation   |        185 |         49 | 111.0151515151515152
+ Drama       |        181 |         46 | 120.8387096774193548
+ Games       |        185 |         57 | 127.8360655737704918
+ Travel      |        185 |         47 | 113.3157894736842105
+ Sci-Fi      |        185 |         51 | 108.1967213114754098
+ Music       |        185 |         47 | 113.6470588235294118
+ Foreign     |        184 |         46 | 121.6986301369863014
+ Classics    |        184 |         46 | 111.6666666666666667
+ Family      |        184 |         48 | 114.7826086956521739
+(16 rows)
 ``` 
 ```
-SELECT 
-  title, 
-  name, 
-  length, 
-  MAX(length) OVER(PARTITION BY name) AS max_length 
-FROM 
-  (
-    SELECT 
-      F.title, 
-      C.name, 
-      F.length 
-    FROM 
-      film F 
-      INNER JOIN film_category FC ON FC.film_id = F.film_id 
-      INNER JOIN category C ON C.category_id = FC.category_id
-  ) X;
+SELECT DISTINCT( c.NAME ),
+               Max(f.length)
+                 OVER(
+                   partition BY c.NAME) AS max_length,
+               Min(f.length)
+                 OVER(
+                   partition BY c.NAME) AS min_length,
+               Avg(f.length)
+                 OVER(
+                   partition BY c.NAME) AS avg_length
+FROM   category c
+       JOIN film_category fc
+         ON fc.category_id = c.category_id
+       JOIN film f
+         ON f.film_id = fc.film_id; 
 ```
 #### 29. movie length stats by id
 Expected Output:
 ```commandline
-
+ film_id |            title            | length | running_total | overall |   running_percentage   
+---------+-----------------------------+--------+---------------+---------+------------------------
+       1 | ACADEMY DINOSAUR            |     86 |            86 |  115272 | 0.07460614893469359428
+       2 | ACE GOLDFINGER              |     48 |           134 |  115272 | 0.11624679020056908876
+       3 | ADAPTATION HOLES            |     50 |           184 |  115272 | 0.15962245818585606218
+.... 
+(1000 rows)
 ``` 
 ```
-SELECT 
-  film_id, 
-  title, 
-  length, 
-  SUM(length) OVER(
-    ORDER BY 
-      film_id
-  ) AS running_total, 
-  SUM(length) OVER() AS overall, 
-  SUM(length) OVER(
-    ORDER BY 
-      film_id
-  ) * 100.0 / SUM(length) OVER() AS running_percentage 
-FROM 
-  film 
-ORDER BY 
-  film_id;
+SELECT film_id,
+       title,
+       length,
+       Sum(length)
+         OVER(
+           ORDER BY film_id )                    AS running_total,
+       Sum(length)
+         OVER()                                  AS overall,
+       Sum(length)
+         OVER(
+           ORDER BY film_id ) * 100.0 / Sum(length)
+                                          OVER() AS running_percentage
+FROM   film
+ORDER  BY film_id; 
 ```
 #### 30. Percentage of revenue per movie
 (film_id <= 10)
@@ -803,28 +814,19 @@ Expected Output:
 
 ``` 
 ```
-select 
-  * 
-from 
-  (
-    select 
-      film_id, 
-      revenue * 100 / SUM(revenue) OVER() revenue_percentage 
-    from 
-      (
-        select 
-          i.film_id, 
-          SUM(p.amount) as revenue 
-        from 
-          inventory I 
-          join rental r on r.inventory_id = i.inventory_id 
-          join payment p on p.rental_id = r.rental_id 
-        group by 
-          i.film_id
-      )
-  ) 
-where 
-  film_id <= 10
+SELECT *
+FROM   (SELECT film_id,
+               revenue * 100 / Sum(revenue)
+                                 OVER() revenue_percentage
+        FROM   (SELECT i.film_id,
+                       Sum(p.amount) AS revenue
+                FROM   inventory I
+                       JOIN rental r
+                         ON r.inventory_id = i.inventory_id
+                       JOIN payment p
+                         ON p.rental_id = r.rental_id
+                GROUP  BY i.film_id))
+WHERE  film_id <= 10;
 ```
 #### 31. Percentage of revenue per movie by category
 (film_id <= 10)
