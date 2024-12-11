@@ -811,7 +811,19 @@ ORDER  BY film_id;
 (film_id <= 10)
 Expected Output:
 ```commandline
-
+ film_id |   revenue_percentage   
+---------+------------------------
+       1 | 0.05454153589380405482
+       2 | 0.07851192534291674250
+       3 | 0.05618801685225177037
+       4 | 0.13612392572679896957
+       5 | 0.07695444335519593049
+       6 | 0.18806965830773500438
+       7 | 0.12289274541206597612
+       8 | 0.15251456950233703881
+       9 | 0.10662076693083044495
+      10 | 0.19545657287806799848
+(10 rows)
 ``` 
 ```
 SELECT *
@@ -826,7 +838,7 @@ FROM   (SELECT film_id,
                        JOIN payment p
                          ON p.rental_id = r.rental_id
                 GROUP  BY i.film_id))
-WHERE  film_id <= 10;
+WHERE  film_id <= 10 order by film_id;
 ```
 #### 31. Percentage of revenue per movie by category
 (film_id <= 10)
