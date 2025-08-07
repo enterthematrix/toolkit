@@ -31,8 +31,6 @@ docker images | grep sanju | awk '{print $3}'
 docker rmi
 docker build -t sanju:5.2 .
 
-docker run --network=cluster -h sanju.sdc -p 18520:18630 -p 8000:8000 -p 9000:9000 --name sdc-520 -d  -e STREAMSETS_DEPLOYMENT_SCH_URL=https://na01.hub.streamsets.com -e STREAMSETS_DEPLOYMENT_ID=a1a3a3ed-eeca-4664-94b5-ec98cdad486c:cd4694f6-2c60-11ec-988d-5b2e605d28aa -e STREAMSETS_DEPLOYMENT_TOKEN=eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJzIjoiM2UzZWRlZjBjOTg5ZmYzNDJmOWUxNTAzZWMzN2U3YzlhOWQwMzNlYWJjNjgxNzE3MzdmYjc4YWVhNDY0NGRlMjI1NjU2OTgyMmQ0YjEyNTdjNThlMWFmMjAyNGVkY2NjMWJiMzE1MWMzZWRkZmI2YjliZTQ1YjU1NTlmMTFiY2UiLCJ2IjoxLCJpc3MiOiJuYTAxIiwianRpIjoiYmUwZGNmYjAtOWIyMC00NjFiLWE3OTQtMWI0MjUwNzkwNTcxIiwibyI6ImNkNDY5NGY2LTJjNjAtMTFlYy05ODhkLTViMmU2MDVkMjhhYSJ9. sanju:5.2
-
 python3.9 -m pip install streamsets~=5.0 mysql-connector-python mysql-connector configparser
 
 

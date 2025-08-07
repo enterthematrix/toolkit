@@ -67,7 +67,7 @@ kafka-run-class kafka.tools.GetOffsetShell --broker-list `hostname`:9092 --topic
 
 ## Delete topic
 
-kafka-topics --delete --bootstrap-server `hostname`:9092  --topic cdc
+kafka-topics --delete --bootstrap-server `hostname`:9092  --topic flights_dev
 
 
 ## Kafka Kerberos:

@@ -26,7 +26,7 @@ WHERE  D.date >= '2020-05-01'
 # DVD Rental Sample Queries
 #### 1. Top store for movie sales 
 Query to return the name of the store and its manager, that generated the most sales.
-
+View: sales_by_store
 Expected Output:
 ```commandline
         store        |   manager    
@@ -34,6 +34,50 @@ Expected Output:
  Woodridge,Australia | Jon Stephens
 
 ```
+without a materilized view:
+```commandline
+WITH rental_data
+AS
+  (
+           SELECT   r.inventory_id,
+                    sum(p.amount) AS total_payment
+           FROM     payment p
+           JOIN     rental r
+           ON       r.rental_id = p.rental_id
+           GROUP BY r.inventory_id ),
+  store_data
+AS
+  (
+           SELECT   i.store_id,
+                    sum(rd.total_payment) AS total_revenue
+           FROM     inventory i
+           JOIN     rental_data rd
+           ON       i.inventory_id = rd.inventory_id
+           GROUP BY i.store_id
+           ORDER BY total_revenue DESC
+           LIMIT    1 ),
+  manager_data
+AS
+  (
+         SELECT s.first_name,
+                s.last_name,
+                a.city_id
+         FROM   store st
+         JOIN   staff s
+         ON     st.manager_staff_id = s.staff_id
+         JOIN   address a
+         ON     s.address_id = a.address_id
+         JOIN   store_data sd
+         ON     st.store_id = sd.store_id )
+  SELECT concat(md.first_name, ' ', md.last_name) AS manager,
+         c.country                                AS store
+  FROM   manager_data md
+  JOIN   city ct
+  ON     md.city_id = ct.city_id
+  JOIN   country c
+  ON     ct.country_id = c.country_id;
+```
+with a materilized view:
 ```
 SELECT 
   store, 
@@ -47,7 +91,7 @@ LIMIT
 ```
 #### 2. Top 3 movie categories by sales
 Query to find the top 3 film categories that generated the most sales.
-
+View: sales_by_film_category
 Expected Output:
 ```commandline
  category  
@@ -56,6 +100,33 @@ Expected Output:
  Sci-Fi
  Animation
 ```
+without a materilized view:
+```commandline
+WITH rental_data
+AS
+  (
+           SELECT   r.inventory_id,
+                    sum(p.amount) AS sales
+           FROM     rental r
+           JOIN     payment p
+           ON       r.rental_id = p.rental_id
+           GROUP BY r.inventory_id )
+  SELECT   c.name
+  FROM     inventory i
+  JOIN     rental_data rd
+  ON       i.inventory_id = rd.inventory_id
+  JOIN     film f
+  ON       i.film_id = f.film_id
+  JOIN     film_category fc
+  ON       f.film_id = fc.film_id
+  JOIN     category c
+  ON       fc.category_id = c.category_id
+  GROUP BY c.name
+  ORDER BY sum(rd.sales) DESC
+  LIMIT    3;
+
+```
+with a materilized view:
 ```
 SELECT 
   category 
@@ -68,7 +139,7 @@ LIMIT
 ```
 #### 3. Top 5 shortest movies
 Query to return the titles of the 5 shortest movies by duration.
-
+Table: film
 Expected Output:
 ```commandline
         title        
@@ -91,7 +162,7 @@ LIMIT
   5;
 ```
 #### 4. Staff without a profile image
-
+Table: staff
 Expected Output:
 ```commandline
  first_name | last_name 
@@ -879,6 +950,19 @@ where
 Query to return the number of rentals per movie, and the average number of rentals in its same category
 Expected Output:
 ```commandline
+ film_id | category_name | rentals | avg_rentals_category 
+---------+---------------+---------+----------------------
+       1 | Documentary   |      23 |  16.6666666666666667
+       2 | Horror        |       7 |  15.9622641509433962
+       3 | Documentary   |      12 |  16.6666666666666667
+       4 | Horror        |      23 |  15.9622641509433962
+       5 | Family        |      12 |  16.3582089552238806
+       6 | Foreign       |      21 |  15.4179104477611940
+       7 | Comedy        |      15 |  16.8035714285714286
+       8 | Horror        |      18 |  15.9622641509433962
+       9 | Horror        |      12 |  15.9622641509433962
+      10 | Sports        |      23 |  16.1506849315068493
+(10 rows)
 
 ``` 
 ```
@@ -907,7 +991,7 @@ from
       join category c on c.category_id = fc.category_id
   ) 
 where 
-  film_id <= 10
+  film_id <= 10 order by film_id;
 ```
 #### 33. Customer spend vs average spend in the same store
 Query to return a customer's lifetime value for the following: customer_id IN (1, 100, 101, 200, 201, 300, 301, 400, 401, 500)
